@@ -3,14 +3,13 @@ package client.main;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import messagesbase.ResponseEnvelope;
-import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ERequestState;
 import messagesbase.messagesfromclient.PlayerRegistration;
 import messagesbase.messagesfromserver.GameState;
+import network.NetworkCommunication;
 import reactor.core.publisher.Mono;
 
 public class MainClient {
@@ -73,10 +72,8 @@ public class MainClient {
 		// individual endpoint
 		// TIP: create it once in the CTOR of your network class and subsequently use it
 		// in each communication method
-		WebClient baseWebClient = WebClient.builder().baseUrl(serverBaseUrl + "/games")
-				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE) // the network protocol uses
-																							// XML
-				.defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE).build();
+
+		NetworkCommunication network = new NetworkCommunication(serverBaseUrl);
 
 		/*
 		 * Note, EACH client must only register a SINGLE player (i.e., you) ONCE! It is
@@ -90,32 +87,17 @@ public class MainClient {
 		 * able to determine and assign related bonus points. No, we will not assign
 		 * them manually if you fail to do so.
 		 */
-		PlayerRegistration playerReg = new PlayerRegistration("Oleksandr", "Lymarenko",
-				"lymarenkoo02");
-		Mono<ResponseEnvelope> webAccess = baseWebClient.method(HttpMethod.POST).uri("/" + gameId + "/players")
-				.body(BodyInserters.fromValue(playerReg)) // specify the data which is sent to the server
-				.retrieve().bodyToMono(ResponseEnvelope.class); // specify the object returned by the server
+		PlayerRegistration playerReg = new PlayerRegistration("Oleksandr", "Lymarenko", "lymarenkoo02");
+		network.registerPlayer(playerReg, gameId);
 
 		// WebClient support asynchronous message exchange. In SE1 we use a synchronous
 		// one for the sake of simplicity. So calling block (which should normally be
 		// avoided) is fine.
-		ResponseEnvelope<UniquePlayerIdentifier> resultReg = webAccess.block();
 
 		// always check for errors, and if some are reported, at least print them to the
 		// console (logging should always be preferred!)
 		// so that you become aware of them during debugging! The provided server gives
 		// you constructive error messages.
-		if (resultReg.getState() == ERequestState.Error) {
-			// typically happens if you forgot to create a new game before the client
-			// execution or forgot to adapt the run configuration so that it supplies
-			// the id of the new game to the client
-			// open http://swe1.wst.univie.ac.at:18235/games in your browser to create a new
-			// game and obtain its game id
-			System.err.println("Client error, errormessage: " + resultReg.getExceptionMessage());
-		} else {
-			UniquePlayerIdentifier uniqueID = resultReg.getData().get();
-			System.out.println("My Player ID: " + uniqueID.getUniquePlayerID());
-		}
 
 		/*
 		 * TIP: Check out the network protocol documentation. It shows you with a nice
@@ -134,11 +116,11 @@ public class MainClient {
 		 * different terminals. When you hit the debug button twice, you can even debug
 		 * both clients "independently" from each other (see, IDE Screencast in Moodle).
 		 * 
-		 * Alternative: Use the dummy competitor mode when creating new games to simplify
-		 * your development phase. But note, this can, of course, only be a rough
-		 * simulation. Why? Because some behavior observed by an actual second client,
-		 * like network delay, will not be present, of course. So perform tests with your
-		 * client running with two actual client instances too.
+		 * Alternative: Use the dummy competitor mode when creating new games to
+		 * simplify your development phase. But note, this can, of course, only be a
+		 * rough simulation. Why? Because some behavior observed by an actual second
+		 * client, like network delay, will not be present, of course. So perform tests
+		 * with your client running with two actual client instances too.
 		 */
 
 		/*
