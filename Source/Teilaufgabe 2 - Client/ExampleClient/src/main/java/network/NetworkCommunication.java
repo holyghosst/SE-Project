@@ -9,53 +9,78 @@ import org.springframework.web.reactive.function.client.WebClient;
 import messagesbase.ResponseEnvelope;
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ERequestState;
+import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerRegistration;
+import messagesbase.messagesfromserver.GameState;
 import reactor.core.publisher.Mono;
 
 public class NetworkCommunication {
-	private String serverBaseURL;
-	private WebClient baseWebClient;
-	private String playerID;
+    private String serverBaseURL;
+    private WebClient baseWebClient;
+    private UniquePlayerIdentifier playerID;
+    private String gameID;
 
-	public String getServerBaseURL() {
-		return serverBaseURL;
+    public String getServerBaseURL() {
+	return serverBaseURL;
+    }
+
+    public WebClient getBaseWebClient() {
+	return baseWebClient;
+    }
+
+    public UniquePlayerIdentifier getPlayerID() {
+	return playerID;
+    }
+
+    public void registerPlayer(PlayerRegistration playerReg, String gameId) {
+	Mono<ResponseEnvelope> webAccess = baseWebClient.method(HttpMethod.POST).uri("/" + gameId + "/players")
+		.body(BodyInserters.fromValue(playerReg)) // specify the data which is sent to the server
+		.retrieve().bodyToMono(ResponseEnvelope.class); // specify the object returned by the server
+
+	ResponseEnvelope<UniquePlayerIdentifier> resultReg = webAccess.block();
+	if (resultReg.getState() == ERequestState.Error) {
+	    System.err.println("Client error, errormessage: " + resultReg.getExceptionMessage());
+	} else {
+	    UniquePlayerIdentifier uniqueID = resultReg.getData().get();
+	    this.gameID = gameId;
+	    this.playerID = uniqueID;
 	}
+    }
 
-	public WebClient getBaseWebClient() {
-		return baseWebClient;
+    public void sendPlayerHalfMap(PlayerHalfMap halfMap) {
+	Mono<ResponseEnvelope> webAccess = baseWebClient.method(HttpMethod.POST).uri("/" + gameID + "/halfmaps")
+		.body(BodyInserters.fromValue(halfMap)).retrieve().bodyToMono(ResponseEnvelope.class);
+	ResponseEnvelope requestResult = webAccess.block();
+	if (requestResult.getState() == ERequestState.Error) {
+	    System.err.println("Client error, errormessage: " + requestResult.getExceptionMessage());
 	}
+    }
 
-	public String getPlayerID() {
-		return playerID;
+    public GameState getGameState() {
+	WebClient baseWebClient = WebClient.builder().baseUrl(serverBaseURL + "/games")
+		.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE) // the network protocol uses
+											  // XML
+		.defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE).build();
+
+	Mono<ResponseEnvelope> webAccess = baseWebClient.method(HttpMethod.GET)
+		.uri("/" + gameID + "/states/" + playerID.getUniquePlayerID()).retrieve()
+		.bodyToMono(ResponseEnvelope.class);
+
+	ResponseEnvelope<GameState> requestResult = webAccess.block();
+	if (requestResult.getState() == ERequestState.Error) {
+	    System.err.println("Client error, errormessage: " + requestResult.getExceptionMessage());
 	}
+	return requestResult.getData().get();
 
-	public void registerPlayer(PlayerRegistration playerReg, String gameId) {
-		Mono<ResponseEnvelope> webAccess = baseWebClient.method(HttpMethod.POST).uri("/" + gameId + "/players")
-				.body(BodyInserters.fromValue(playerReg)) // specify the data which is sent to the server
-				.retrieve().bodyToMono(ResponseEnvelope.class); // specify the object returned by the server
+    }
 
-		ResponseEnvelope<UniquePlayerIdentifier> resultReg = webAccess.block();
-		if (resultReg.getState() == ERequestState.Error) {
-			// typically happens if you forgot to create a new game before the client
-			// execution or forgot to adapt the run configuration so that it supplies
-			// the id of the new game to the client
-			// open http://swe1.wst.univie.ac.at:18235/games in your browser to create a new
-			// game and obtain its game id
-			System.err.println("Client error, errormessage: " + resultReg.getExceptionMessage());
-		} else {
-			UniquePlayerIdentifier uniqueID = resultReg.getData().get();
-			this.playerID = uniqueID.getUniquePlayerID();
-			System.out.println("My Player ID: " + playerID);
-		}
-	}
-
-	public NetworkCommunication(String serverBaseURL) {
-		super();
-		this.serverBaseURL = serverBaseURL;
-		this.baseWebClient = WebClient.builder().baseUrl(serverBaseURL + "/games")
-				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE) // the network protocol uses
-																							// XML
-				.defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE).build();
-	}
+    public NetworkCommunication(String serverBaseURL) {
+	super();
+	this.serverBaseURL = serverBaseURL;
+	this.baseWebClient = WebClient.builder().baseUrl(serverBaseURL + "/games")
+		.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE) // the network protocol uses
+											  // XML
+		.defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE).build();
+    }
 
 }
