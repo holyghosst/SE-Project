@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HalfMap {
+public class HalfMap extends AbstractMap {
     private Map<Coordinates, MapField> fields = new HashMap<Coordinates, MapField>();
     private Coordinates startPosition;
 
@@ -40,16 +40,14 @@ public class HalfMap {
 	setFortress(startPosition);
     }
 
-    @Override
-    public String toString() {
-	StringBuilder stringBuilder = new StringBuilder();
-
-	fields.forEach((key, value) -> stringBuilder.append(value.toString()));
-	return stringBuilder.toString();
-    }
-
     public void printOut() {
-	String mapString = this.toString();
+	StringBuilder stringBuilder = new StringBuilder();
+	for (int y = 0; y < 5; y++) {
+	    for (int x = 0; x < 10; x++) {
+		stringBuilder.append(getField(x, y).toString());
+	    }
+	}
+	String mapString = stringBuilder.toString();
 	for (int i = 0; i < mapString.length(); i++) {
 	    if (i % 10 == 0 && i != 0) {
 		System.out.println();

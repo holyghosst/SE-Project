@@ -76,7 +76,7 @@ public class HalfMapGenerator {
 	List<Coordinates> coordinates = generateMapCoordinates();
 	Map<Coordinates, MapField> fields = fillWithTerrain(coordinates);
 	Coordinates fortressCoordinates = fortressCoordinates(fields);
-	while (!validator.validateNoIslands(fields, fortressCoordinates) && !validator.validateMapEdges(fields)) {
+	while (!validator.validateNoIslands(fields, fortressCoordinates) || !validator.validateMapEdges(fields)) {
 	    coordinates = generateMapCoordinates();
 	    fields = fillWithTerrain(coordinates);
 	    fortressCoordinates = fortressCoordinates(fields);

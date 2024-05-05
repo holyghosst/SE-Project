@@ -18,8 +18,12 @@ public class HalfMapValidator {
 	return (x > -1 && x < 10 && y > -1 && y < 5);
     }
 
+    private boolean legalCoordinates(Coordinates c) {
+	return (c.getX() > -1 && c.getX() < 10 && c.getY() > -1 && c.getY() < 5);
+    }
+
     private boolean passableField(MapField field) {
-	return (field.getTerrainType() == Terrain.MOUNTAIN || field.getTerrainType() == Terrain.GRASS);
+	return (field.getTerrainType() != Terrain.WATER);
     }
 
     public boolean validateNoIslands(Map<Coordinates, MapField> fields, Coordinates startPosition) {
@@ -40,19 +44,25 @@ public class HalfMapValidator {
 	    Coordinates current = queue.poll();
 	    int xCoordinate = current.getX();
 	    int yCoordinate = current.getY();
+
 	    if (passableField(fields.get(current)) && !visitedCoordinates.contains(current)) {
 		visitedCoordinates.add(current);
-		if (legalCoordinates(xCoordinate - 1, yCoordinate)) {
-		    queue.add(new Coordinates(xCoordinate - 1, yCoordinate));
+		Coordinates leftField = new Coordinates(xCoordinate - 1, yCoordinate);
+		Coordinates rightField = new Coordinates(xCoordinate + 1, yCoordinate);
+		Coordinates downField = new Coordinates(xCoordinate, yCoordinate + 1);
+		Coordinates upperField = new Coordinates(xCoordinate, yCoordinate - 1);
+
+		if (legalCoordinates(leftField) && passableField(fields.get(leftField))) {
+		    queue.add(leftField);
 		}
-		if (legalCoordinates(xCoordinate + 1, yCoordinate)) {
-		    queue.add(new Coordinates(xCoordinate + 1, yCoordinate));
+		if (legalCoordinates(rightField) && passableField(fields.get(rightField))) {
+		    queue.add(rightField);
 		}
-		if (legalCoordinates(xCoordinate, yCoordinate + 1)) {
-		    queue.add(new Coordinates(xCoordinate, yCoordinate + 1));
+		if (legalCoordinates(downField) && passableField(fields.get(downField))) {
+		    queue.add(downField);
 		}
-		if (legalCoordinates(xCoordinate, yCoordinate - 1)) {
-		    queue.add(new Coordinates(xCoordinate, yCoordinate - 1));
+		if (legalCoordinates(upperField) && passableField(fields.get(upperField))) {
+		    queue.add(upperField);
 		}
 
 	    } else {
@@ -60,10 +70,7 @@ public class HalfMapValidator {
 	    }
 	    // TAKEN FROM END 1
 	}
-	if (visitedCoordinates.containsAll(passableFields)) {
-	    return true;
-	} else
-	    return false;
+	return (visitedCoordinates.containsAll(passableFields));
     }
 
     public boolean validateMapEdges(Map<Coordinates, MapField> fields) {
