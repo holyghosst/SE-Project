@@ -8,7 +8,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class HalfMapGenerator {
+    private final static Logger logger = LoggerFactory.getLogger(HalfMapGenerator.class);
     private Random random = new Random();
     private ArrayList<Terrain> terrainTypes = new ArrayList<Terrain>(
 	    List.of(Terrain.GRASS, Terrain.WATER, Terrain.MOUNTAIN));
@@ -32,7 +36,7 @@ public class HalfMapGenerator {
 
     private Map<Coordinates, MapField> fillWithTerrain(List<Coordinates> coordinates) {
 	Map<Coordinates, MapField> fields = new HashMap<Coordinates, MapField>();
-	int grassFieldsLeast = 25;
+	int grassFieldsLeast = 33;
 	int waterFieldsLeast = 7;
 	int mountainFieldsLeast = 5;
 
@@ -81,6 +85,7 @@ public class HalfMapGenerator {
 	    fields = fillWithTerrain(coordinates);
 	    fortressCoordinates = fortressCoordinates(fields);
 	}
+	logger.info("HalfMap has been successfuly generated and validated.");
 	return new HalfMap(fields, fortressCoordinates);
 
     }

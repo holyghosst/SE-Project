@@ -12,14 +12,15 @@ public class HalfMapValidator {
     // TAKEN FROM 1
     // Quelle:
     // https://web.piyushgarg.in/2021/09/flood-fill-4-directional-using-java.html
-    // Ich habe grundsätzlich die Idee mit Queue und while übernommen.
+    // Ich habe grundsätzlich die Idee mit Queue und while übernommen und
+    // entsprechend angepasst.
 
     private boolean legalCoordinates(int x, int y) {
 	return (x > -1 && x < 10 && y > -1 && y < 5);
     }
 
     private boolean legalCoordinates(Coordinates c) {
-	return (c.getX() > -1 && c.getX() < 10 && c.getY() > -1 && c.getY() < 5);
+	return legalCoordinates(c.getX(), c.getY());
     }
 
     private boolean passableField(MapField field) {
