@@ -22,6 +22,10 @@ public class MapField {
 	return (fieldObject == FieldObject.PLAYER_FORTRESS);
     }
 
+    public boolean playerPresent() {
+	return (playerPosition == PlayerPosition.PRESENT || playerPosition == PlayerPosition.BOTH_PRESENT);
+    }
+
     public MapField(Terrain terrainType, FieldObject fieldObject) {
 	super();
 	this.terrainType = terrainType;
@@ -44,24 +48,23 @@ public class MapField {
 	this.treasureState = treasureState;
     }
 
-    @Override
-    public String toString() {
+    public String printOut() {
 	if (fieldObject == FieldObject.PLAYER_FORTRESS) {
-	    return "F";
+	    return "F ";
 	} else if (playerPosition == PlayerPosition.PRESENT) {
-	    return "+";
+	    return "+ ";
 	} else if (playerPosition == PlayerPosition.ENEMY_PRESENT) {
-	    return "-";
+	    return "- ";
 	} else if (playerPosition == PlayerPosition.BOTH_PRESENT) {
-	    return "*";
+	    return "# ";
 	} else if (treasureState == TreasureState.PLAYER_TREASURE) {
-	    return "$";
+	    return "$ ";
 	} else if (terrainType == Terrain.WATER) {
-	    return "~";
+	    return "~ ";
 	} else if (terrainType == Terrain.MOUNTAIN) {
-	    return "M";
+	    return "^ ";
 	} else {
-	    return "G";
+	    return "G ";
 	}
     }
 
