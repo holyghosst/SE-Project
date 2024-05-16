@@ -8,21 +8,20 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import client.main.MainClient;
 import map.ClientFullMap;
 import map.HalfMap;
 import messagesbase.ResponseEnvelope;
 import messagesbase.UniquePlayerIdentifier;
-import messagesbase.messagesfromclient.EMove;
 import messagesbase.messagesfromclient.ERequestState;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromclient.PlayerRegistration;
 import messagesbase.messagesfromserver.GameState;
+import pathgeneration.PlayerMoveDirection;
 import reactor.core.publisher.Mono;
 
 public class NetworkCommunication {
-    private final static Logger logger = LoggerFactory.getLogger(MainClient.class);
+    private final static Logger logger = LoggerFactory.getLogger(NetworkCommunication.class);
 
     private String serverBaseURL;
     private UniquePlayerIdentifier playerID;
@@ -38,8 +37,7 @@ public class NetworkCommunication {
 	this.serverBaseURL = serverBaseURL;
 	this.converter = converter;
 	this.baseWebClient = WebClient.builder().baseUrl(serverBaseURL + "/games")
-		.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE) // the network protocol uses
-											  // XML
+		.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
 		.defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE).build();
     }
 
@@ -72,7 +70,8 @@ public class NetworkCommunication {
 	lastRequestTime = System.currentTimeMillis();
     }
 
-    public void registerPlayer(String firstName, String lastName, String studentUAccount, String gameId) {
+    public void registerPlayer(String firstName, String lastName, String studentUAccount, String gameId)
+	    throws NetworkCommunicationException {
 	waitBeforeRequest();
 
 	PlayerRegistration playerReg = new PlayerRegistration(firstName, lastName, studentUAccount);
@@ -81,7 +80,8 @@ public class NetworkCommunication {
 	ResponseEnvelope<UniquePlayerIdentifier> resultReg = webAccess.block();
 
 	if (resultReg.getState() == ERequestState.Error) {
-	    System.err.println("Client error, errormessage: " + resultReg.getExceptionMessage());
+	    logger.error("Error while registering player!");
+	    throw new NetworkCommunicationException(resultReg.getExceptionMessage());
 	} else {
 	    UniquePlayerIdentifier uniqueID = resultReg.getData().get();
 	    this.gameID = gameId;
@@ -91,7 +91,7 @@ public class NetworkCommunication {
 	}
     }
 
-    public void sendHalfMap(HalfMap halfMap) throws ConverterException {
+    public void sendHalfMap(HalfMap halfMap) throws ConverterException, NetworkCommunicationException {
 	waitBeforeRequest();
 
 	PlayerHalfMap playerHalfMap = converter.convertHalfMap(halfMap);
@@ -100,12 +100,12 @@ public class NetworkCommunication {
 
 	ResponseEnvelope requestResult = webAccess.block();
 	if (requestResult.getState() == ERequestState.Error) {
-	    System.err.println("Client error, errormessage: " + requestResult.getExceptionMessage());
+	    throw new NetworkCommunicationException(requestResult.getExceptionMessage());
 	}
 	logger.info("HalfMap has been sent.");
     }
 
-    public GameState getGameState() {
+    public GameState getGameState() throws NetworkCommunicationException {
 	waitBeforeRequest();
 
 	WebClient baseWebClient = WebClient.builder().baseUrl(serverBaseURL + "/games")
@@ -116,31 +116,33 @@ public class NetworkCommunication {
 		.uri("/" + gameID + "/states/" + getStringPlayerID()).retrieve().bodyToMono(ResponseEnvelope.class);
 	ResponseEnvelope<GameState> requestResult = webAccess.block();
 	if (requestResult.getState() == ERequestState.Error) {
-	    System.err.println("Client error, errormessage: " + requestResult.getExceptionMessage());
+	    logger.error("Error while getting GameState");
+	    throw new NetworkCommunicationException(requestResult.getExceptionMessage());
 	}
 	return requestResult.getData().get();
 
     }
 
-    public void sendMove() {
+    public void sendMove(PlayerMoveDirection moveDirection) throws ConverterException, NetworkCommunicationException {
 	waitBeforeRequest();
-	PlayerMove move = PlayerMove.of(playerID, EMove.Left);
+	PlayerMove playerMove = converter.convertPlayerMoveDirection(moveDirection);
 
 	Mono<ResponseEnvelope> webAccess = baseWebClient.method(HttpMethod.POST).uri("/" + gameID + "/moves")
-		.header("accept", "application/xml").body(BodyInserters.fromValue(move)).retrieve()
+		.header("accept", "application/xml").body(BodyInserters.fromValue(playerMove)).retrieve()
 		.bodyToMono(ResponseEnvelope.class);
 
 	ResponseEnvelope requestResult = webAccess.block();
 	if (requestResult.getState() == ERequestState.Error) {
-	    System.err.println("Client error, errormessage: " + requestResult.getExceptionMessage());
+	    logger.error("Error while sending PlayerMove");
+	    throw new NetworkCommunicationException(requestResult.getExceptionMessage());
 	}
     }
 
-    public ClientGameState getClientGameState() throws ConverterException {
+    public ClientGameState getClientGameState() throws ConverterException, NetworkCommunicationException {
 	return converter.convertGameState(getGameState());
     }
 
-    public boolean isMyTurn() throws ConverterException {
+    public boolean isMyTurn() throws ConverterException, NetworkCommunicationException {
 	ClientGameState gameState = getClientGameState();
 	ClientPlayerState playerState = gameState.getPlayerState();
 	boolean myTurn = playerState.getState() == ClientPlayerGameState.MustAct;
@@ -148,16 +150,16 @@ public class NetworkCommunication {
 	return myTurn;
     }
 
-    public boolean gameUndetermined() throws ConverterException {
+    public boolean gameUndetermined() throws ConverterException, NetworkCommunicationException {
 	ClientGameState gameState = getClientGameState();
 	ClientPlayerState playerState = gameState.getPlayerState();
-	boolean undetermined = (playerState.getState() == ClientPlayerGameState.MustAct
+	boolean isUndetermined = (playerState.getState() == ClientPlayerGameState.MustAct
 		|| playerState.getState() == ClientPlayerGameState.MustWait);
 
-	return undetermined;
+	return isUndetermined;
     }
 
-    public ClientFullMap getFullMap() throws ConverterException {
+    public ClientFullMap getFullMap() throws ConverterException, NetworkCommunicationException {
 	ClientGameState gameState = getClientGameState();
 	ClientFullMap map = gameState.getMap();
 	return map;
