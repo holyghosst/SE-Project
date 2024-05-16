@@ -23,14 +23,4 @@ public class ClientPlayerState {
 	return "ClientPlayerState [collectedTreasure=" + collectedTreasure + ", state=" + state + "]";
     }
 
-    public void printOut() {
-	if (collectedTreasure) {
-	    System.out.print("Treasure collected, ");
-	} else {
-	    System.out.print("Treasure NOT collected, ");
-	}
-	System.out.print(state);
-	System.out.println();
-    }
-
 }
