@@ -1,5 +1,5 @@
 package pathgeneration;
 
-public enum PlayerMove {
+public enum PlayerMoveDirection {
     UP, DOWN, LEFT, RIGHT
 }
