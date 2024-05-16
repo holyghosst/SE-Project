@@ -13,9 +13,11 @@ import map.PlayerPosition;
 import map.Terrain;
 import map.TreasureState;
 import messagesbase.UniquePlayerIdentifier;
+import messagesbase.messagesfromclient.EMove;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerHalfMapNode;
+import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.EFortState;
 import messagesbase.messagesfromserver.EPlayerGameState;
 import messagesbase.messagesfromserver.EPlayerPositionState;
@@ -24,6 +26,7 @@ import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
+import pathgeneration.PlayerMoveDirection;
 
 public class NetworkConverter {
 
@@ -55,7 +58,7 @@ public class NetworkConverter {
 	case Water:
 	    return Terrain.WATER;
 	default:
-	    throw new ConverterException("Failed to convert ETerrain. ");
+	    throw new ConverterException("Failed to convert ETerrain.");
 	}
     }
 
@@ -87,7 +90,7 @@ public class NetworkConverter {
 	case NoPlayerPresent:
 	    return PlayerPosition.NOT_PRESENT;
 	default:
-	    throw new ConverterException("Failed to convert EPlayerPositionState");
+	    throw new ConverterException("Failed to convert EPlayerPositionState.");
 	}
     }
 
@@ -100,7 +103,7 @@ public class NetworkConverter {
 	case NoOrUnknownFortState:
 	    return FieldObject.UNKNOWN;
 	default:
-	    throw new ConverterException("Failed to convert EFortState");
+	    throw new ConverterException("Failed to convert EFortState.");
 
 	}
     }
@@ -112,7 +115,7 @@ public class NetworkConverter {
 	case NoOrUnknownTreasureState:
 	    return TreasureState.NO_UNKNOWN;
 	default:
-	    throw new ConverterException("Failed to convert ETreasureState");
+	    throw new ConverterException("Failed to convert ETreasureState.");
 	}
     }
 
@@ -171,6 +174,22 @@ public class NetworkConverter {
 	ClientFullMap map = convertFullMap(gameState.getMap());
 
 	return new ClientGameState(gameStateID, convertedPlayerState, map);
+
+    }
+
+    public PlayerMove convertPlayerMoveDirection(PlayerMoveDirection direction) throws ConverterException {
+	switch (direction) {
+	case DOWN:
+	    return PlayerMove.of(playerID, EMove.Down);
+	case LEFT:
+	    return PlayerMove.of(playerID, EMove.Left);
+	case RIGHT:
+	    return PlayerMove.of(playerID, EMove.Right);
+	case UP:
+	    return PlayerMove.of(playerID, EMove.Up);
+	default:
+	    throw new ConverterException("Failed to convert PlayerMoveDirection.");
+	}
 
     }
 
