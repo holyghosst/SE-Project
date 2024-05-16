@@ -1,10 +1,15 @@
-How to import this project into Eclipse:
-1) Start Eclipse
-2) File -> Import
-3) select Gradle -> Existing Gradle Project 
-4) select the root folder of this project (unpack the compressed file first). The correct root folder is the folder the ReadMe is placed in.
-5) Press "next", then "finish" 
-6) wait till the configuration and the library download is finished (an Internet connection is required).
+Wegfindung: für diesen Teil habe ich Tiefensuche implementiert. Dafür habe ich den Pseudocode von Wikipedia übernommen, mit einigen Anpassungen. So wurden z.B. als Nachbarn eines Feldes nur Terrains GRASS und MOUNTAIN gezählt, um das Betreten von Wasserfeldern zu vermeiden. Außerdem habe ich so eine Art Backtracking hinzugefügt, die es ermöglicht, den Weg zurück zu nehmen.
 
-Description:
-This project provides a foundation for your own implementation of the Client. Import it in Eclipse to get an excellent starting point. You will solely need to add your own classes, code, and so on, as all the build management is already configured nicely along with the integration of the provided network message implementation. It is recommended that you also read the comments provided inside of the classes. They give tips and help you to understand the provided example code. The latter code, e.g., shows you how to use and implement the network communication with the provided server implementation. 
+Kartengenerierung: Die Karte wird zufällig generiert. Die Mindestanzahl von jeweiligen Terrains wird berücksichtigt. Um aber meinen dummen Wegfindung-Algorithmus zu kompensieren, habe ich die Mindestanzahl von Grasfeldern von 25 auf 33 erhöht. So gewinnt meine KI viel mehr, als davor. Die Validierung erfolgt innerhalb von Kartengenerierungsmethode, es werden also sicher mehrere Karten erstellt, und nur die richtige wird dann ausgegeben. Für den Validator habe ich FloodFill verwendet. Diesen Algorithmus habe ich auch übernommen, die entsprechende Quelle befindet sich im Code. Die Ränder werden auch validiert.
+
+Netzwerk: Converter ist ein Feld im Netzwerkklasse und wird da intern verwendet und ist eigentlich für die anderen Klassen "unsichtbar". Das ist der einzige Bereich, wo ich auch die Exceptions werfe.
+
+MVC: Ich habe den PropertyChangedListener implementiert. View-Klasse hat bei mir output-Methoden, die dann für das jeweilige Property ausgeführt werden. Controller-Methoden und die Verwendung von while- und ifs stellen meine Spiellogik dar. Controller registriert den User, prüft regelmäßig, wer ist dran und anhand von Model-Daten wird entschieden, was jetzt zu machen ist.
+
+
+
+
+
+ 
+
+
